@@ -19,3 +19,11 @@ body {
   height: 28px;
   pointer-events: none;
 }
+
+.slider .handle {
+fill: #fff;
+stroke: #000;
+stroke-opacity: .5;
+stroke-width: 1.25px;
+cursor: crosshair;
+}

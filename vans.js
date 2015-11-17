@@ -1,6 +1,8 @@
-var margin = { top: 20, right: 20, bottom: 30, left: 60 },
+'use strict';
+
+var margin = { top: 20, right: 20, bottom: 230, left: 60 },
     width  = 960 - margin.left - margin.right,
-    height = 500 - margin.top  - margin.bottom;
+    height = 700 - margin.top  - margin.bottom;
 
 // setup x
 var xValue = function(d) { return d.miles },
@@ -9,10 +11,24 @@ var xValue = function(d) { return d.miles },
     xAxis  = d3.svg.axis().scale(xScale).orient("bottom");
 
 // setup y
-var yValue = function(d) { return d.price / (140000 - d.miles) * 15000},
-    yScale = d3.scale.linear().range([height, 0]),
-    yMap   = function(d) { return yScale(yValue(d)) },
+var yScale = d3.scale.linear().range([height, 0]),
     yAxis  = d3.svg.axis().scale(yScale).orient("left");
+var yValue, yMap;
+
+function updateY(total_miles) {
+    yValue = function(d) { return d.price / (total_miles - d.miles) * 18000};
+    yMap   = function(d) { return yScale(yValue(d)) };
+
+    svg.select("g .y.axis").call(yAxis);
+
+    var data = svg.selectAll("g .dot").data();
+
+    yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+    // svg.selectAll("g .y.axis").call(yAxis)
+    svg.selectAll("g .dot").attr("cy", function(d) {
+        return yMap(d);
+    })
+}
 
 // setup fill color
 var cValue = function(d) { return d.year },
@@ -24,6 +40,61 @@ var svg = d3.select("body").append("svg")
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// set up slider for total expected miles
+(() => {
+    let margin = { top: 200, right: 50, bottom: 200, left: 50 },
+        width  = 960 - margin.left - margin.right,
+        height = 500 - margin.bottom - margin.top;
+    let x = d3.scale.linear()
+        .domain([75000, 200000])
+        .range([0, width])
+        .clamp(true);
+
+    let brush = d3.svg.brush().x(x).extent([0, 0]).on("brush", brushed);
+    function brushed() {
+
+        var value = brush.extent()[0];
+        if (d3.event.sourceEvent) { // not a programmatic event
+            value = x.invert(d3.mouse(this)[0]);
+            brush.extent([value, value]);
+        }
+        handle.attr("cx", x(value));
+
+        updateY(value);
+    }
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", `translate(0, ${500 + height/2})`)
+        .call(d3.svg.axis()
+            .scale(x)
+            .orient("bottom")
+            .tickFormat(d => { return d })
+            .tickSize(0)
+            .tickPadding(12));
+
+    // add slider
+    var slider = svg.append("g")
+        .attr("class", "slider")
+        .call(brush);
+    slider.selectAll(".extent,.resize").remove();
+
+    var handle = slider.append("circle")
+        .attr("class", "handle")
+        .attr("transform", `translate(0, ${500 + height/2})`)
+        .attr("r", 9);
+
+    slider
+        .call(brush.event)
+        .transition()
+        .duration(750)
+        .call(brush.extent([140000,140000]))
+        .call(brush.event);
+})()
+
+
+
 
 // add the tooltip area to the webpage
 var tooltip = d3.select("body").append("div")
