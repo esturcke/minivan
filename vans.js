@@ -11,6 +11,8 @@ let fees = (car) => ({
   'carmax'                         : 99,
   'chantilly auto sales'           : 595,
   'joyce koons'                    : 800,
+  'win kelly'                      : 299,
+  'euromotorcars'                  : 299,
 }[car.dealer] || 800)
 
 let process = (car) => {
@@ -30,9 +32,9 @@ let process = (car) => {
 
 let cost_per_year = (car, total_miles) => car.total / (total_miles - car.miles) * MILES_PER_YEAR
 
-var margin = { top: 20, right: 20, bottom: 230, left: 60 },
+var margin = { top: 20, right: 20, bottom: 130, left: 60 },
     width  = 960 - margin.left - margin.right,
-    height = 700 - margin.top  - margin.bottom;
+    height = 600 - margin.top  - margin.bottom;
 
 // setup x
 var xValue = function(d) { return d.miles },
@@ -76,25 +78,23 @@ var table   = d3.select("body").append("table");
 var thead   = table.append("thead");
 var tbody   = table.append("tbody");
 var columns = [
-    { head : 'year', cl : '', html : r => r.year },
-    { head : 'trim', cl : '', html : r => r.trim },
-    { head : 'color', cl : '', html : r => r.color },
-    { head : 'miles', cl : '', html : r => r.miles },
-    { head : 'price', cl : '', html : r => r.price },
-    { head : 'history', cl : '', html : r => r.history },
-    { head : 'tags', cl : '', html : r => r.tags },
-    { head : 'dealer', cl : '', html : r => r.dealer },
-    { head : 'city', cl : '', html : r => r.city },
-    { head : 'state', cl : '', html : r => r.state },
-    { head : 'distance', cl : '', html : r => r.distance }
+    { head : 'year',   w : 50,  cl : '', html : r => r.year },
+    { head : 'trim',   w : 60,  cl : '', html : r => r.trim },
+    { head : 'color',  w : 120, cl : '', html : r => r.color },
+    { head : 'miles',  w : 50,  cl : '', html : r => r.miles },
+    { head : 'price',  w : 50,  cl : '', html : r => `$${r.price}` },
+    { head : 'dealer', w : 50,  cl : '', html : r => `${r.dealer} <i>/ ${r.city}, ${r.state} (${r.distance} mi)</i>` }
 ];
-thead.append("tr").selectAll("th").data(columns).enter().append("th").attr('class', c => c.cl ).text( c => c.head );
+thead.append("tr").selectAll("th").data(columns).enter()
+  .append("th")
+    .style("width", d => `${d.w}px` )
+    .attr('class', c => c.cl ).text( c => c.head );
 
 // set up slider for total expected miles
 (() => {
-    let margin = { top: 200, right: 20, bottom: 200, left: 60 },
+    let margin = { top: 10, right: 20, bottom: 10, left: 60 },
         width  = 960 - margin.left - margin.right,
-        height = 500 - margin.bottom - margin.top;
+        height = 30 - margin.bottom - margin.top;
     let x = d3.scale.linear()
         .domain([75000, 200000])
         .range([0, width])
@@ -112,7 +112,6 @@ thead.append("tr").selectAll("th").data(columns).enter().append("th").attr('clas
 
         updateY(value);
     }
-
 
     svg.append("g")
         .attr("class", "x axis")
@@ -138,7 +137,7 @@ thead.append("tr").selectAll("th").data(columns).enter().append("th").attr('clas
     var handle = slider.append("circle")
         .attr("class", "handle")
         .attr("transform", `translate(0, ${500 + height/2})`)
-        .attr("r", 5);
+        .attr("r", 12);
 
     slider
         .call(brush.event)
@@ -147,9 +146,6 @@ thead.append("tr").selectAll("th").data(columns).enter().append("th").attr('clas
         .call(brush.extent([140000,140000]))
         .call(brush.event);
 })()
-
-
-
 
 // add the tooltip area to the webpage
 var tooltip = d3.select("body").append("div")
@@ -207,7 +203,8 @@ d3.csv("vans.csv", function(error, data) {
       .attr("r", car => r(car.distance))
       .attr("cx", xMap)
       .attr("cy", yMap)
-      .style("fill", function(d) { return color(cValue(d)) })
+      .style("fill",  car => car.sold ? "none" : color(cValue(car)))
+      .style("stroke", car => car.sold ? color(cValue(car)) : "none" )
       .on("mouseover", function(d) {
           tooltip.transition()
                .duration(200)
@@ -227,7 +224,7 @@ d3.csv("vans.csv", function(error, data) {
       .data(color.domain())
     .enter().append("g")
       .attr("class", "legend")
-      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")" });
+      .attr("transform", (d, i) => `translate(0, ${i * 20})`);
 
   // draw legend colored rectangles
   legend.append("rect")
@@ -260,5 +257,6 @@ d3.csv("vans.csv", function(error, data) {
     } ))
     .enter()
     .append("td")
+      .style("width", d => `${d.w}px` )
       .html( d => d.html ).attr('class', d => d.cl );
 });

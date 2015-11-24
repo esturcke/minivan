@@ -28,3 +28,40 @@ body {
     stroke-width   : 1.25px;
     cursor         : crosshair;
 }
+
+table {
+    position : absolute;
+    display  : block;
+    top      : 600px;
+    bottom   : 30px;
+    left     : 60px;
+    width    : 650px;
+}
+
+thead {
+    position : absolute;
+    top      : 0;
+    left     : 0;
+    right    : 0;
+    height   : 17px;
+}
+
+th, td {
+    text-align    : left;
+    white-space   : nowrap;
+    text-overflow : ellipsis;
+    border-collapse : collapse;
+}
+
+tbody {
+    position : absolute;
+    top      : 17px;
+    bottom   : 0;
+    left     : 0;
+    right    : 0;
+    overflow : auto;
+}
+
+table i {
+    opacity: 0.5;
+}
